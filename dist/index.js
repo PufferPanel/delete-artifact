@@ -16,7 +16,8 @@ async function main() {
         const repositoryOwner = github.context.repo.owner;
         const repositoryName = github.context.repo.repo;
 
-        const octokit = github.getOctokit(process.env.GITHUB_TOKEN);
+        const token = core.getInput('authToken') || getRuntimeToken();
+        const octokit = github.getOctokit(token);
 
         const { data: artifacts } = await octokit.actions.listWorkflowRunArtifacts({
             owner: repositoryOwner,
@@ -38,6 +39,14 @@ async function main() {
     } catch (error) {
         core.setFailed(error.message);
     }
+}
+
+function getRuntimeToken() {
+    const token = process.env['ACTIONS_RUNTIME_TOKEN']
+    if (!token) {
+        throw new Error('Unable to get ACTIONS_RUNTIME_TOKEN env variable')
+    }
+    return token
 }
 
 main();
