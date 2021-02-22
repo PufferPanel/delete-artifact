@@ -9,17 +9,16 @@ async function main() {
         const repositoryOwner = github.context.repo.owner;
         const repositoryName = github.context.repo.repo;
 
-        const token = getRuntimeToken();
-        const octokit = github.getOctokit(token);
+        const octokit = github.getOctokit(process.env.GITHUB_TOKEN);
 
-        const artifacts = await octokit.actions.listWorkflowRunArtifacts({
+        const { data: artifacts } = await octokit.actions.listWorkflowRunArtifacts({
             owner: repositoryOwner,
             repo: repositoryName,
             run_id: runId,
         });
 
-        for(let i in artifacts.data.artifacts) {
-            const artifact = artifacts.data.artifacts[i];
+        for(let i in artifacts) {
+            const artifact = artifacts[i];
             if (artifact.name === artifactName) {
                 await octokit.actions.deleteArtifact({
                     owner: repositoryOwner,
@@ -32,14 +31,6 @@ async function main() {
     } catch (error) {
         core.setFailed(error.message);
     }
-}
-
-function getRuntimeToken() {
-    const token = process.env['ACTIONS_RUNTIME_TOKEN']
-    if (!token) {
-        throw new Error('Unable to get ACTIONS_RUNTIME_TOKEN env variable')
-    }
-    return token
 }
 
 main();
